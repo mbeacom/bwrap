@@ -40,15 +40,6 @@ jobs:
       - name: Poetry Version
         run: poetry --version
 
-      - name: Add version to environment vars
-        run: echo "MODULE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-
-      - name: Check if source version is up-to-date
-        run: |
-          TAG=$(git describe HEAD --tags --abbrev=0)
-          echo Current Tag: $TAG -- Current Module Version: $MODULE_VERSION
-          if [[ "$TAG" != "$MODULE_VERSION" ]]; then exit 1; fi
-
       - name: Check pyproject.toml validity
         run: poetry check --no-interaction
 
