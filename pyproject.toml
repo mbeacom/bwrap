@@ -1,0 +1,62 @@
+[tool.poetry]
+name = "bwrap"
+version = "0"  # This is set dynamically via current git tag.
+description = "A basic python binary wrapper."
+authors = ["Mark Beacom <m@beacom.dev>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+[tool.poetry.group.dev.dependencies]
+isort = "^5.9.3"
+black = "^21.8b0"
+pydocstyle = "^6.1.1"
+pylint = "^2.10.2"
+bandit = "^1.7.0"
+safety = "^1.10.3"
+debugpy = "^1.5.1"
+mypy = "^0.910"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^6.2.5"
+coverage = "^5.5"
+pytest-mock = "^3.6.1"
+
+[tool.poetry.group.docs.dependencies]
+mkdocs = "^1.2.2"
+mkdocs-material = "^7.3.1"
+
+[tool.poetry.scripts]
+bwrap = "bwrap.core:main"
+
+[tool.poetry-version-plugin]
+source = "git-tag"
+
+# Styling and linting Configurations
+[tool.isort]
+profile = "black"
+line_length = 120
+
+[tool.black]
+line-length = 120
+target-version = ["py39"]
+
+[tool.pylint]
+max-line-length = 120
+
+[tool.pylint.messages_control]
+max-line-length = 120
+
+[tool.pylint.format]
+max-line-length = 120
+max-module-lines = 1000
+
+# Documentation Configuration
+[tool.portray.mkdocs.theme]
+name = "material"
+palette = {primary = "blue", accent = "light blue"}
+
+# Build System Configuration
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

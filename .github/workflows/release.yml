@@ -1,0 +1,95 @@
+on:
+  push:
+    tags:
+      - '*'
+
+name: Create Release
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - name: Cache Poetry
+        id: cache-poetry
+        uses: actions/cache@v2
+        with:
+          path: ~/.poetry
+          key: poetry
+
+      - name: Install Poetry
+        if: steps.cache-poetry.outputs.cache-hit != 'true'
+        run: |
+          curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py -O
+          python install-poetry.py --preview
+
+      - name: Add Poetry to $PATH
+        run: echo "$HOME/.poetry/bin" >> $GITHUB_PATH
+
+      - name: Add versioning plugin
+        run: poetry plugin add poetry-version-plugin
+
+      - name: Poetry Version
+        run: poetry --version
+
+      - name: Add version to environment vars
+        run: echo "MODULE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+      - name: Check if source version is up-to-date
+        run: |
+          TAG=$(git describe HEAD --tags --abbrev=0)
+          echo Current Tag: $TAG -- Current Module Version: $MODULE_VERSION
+          if [[ "$TAG" != "$MODULE_VERSION" ]]; then exit 1; fi
+
+      - name: Check pyproject.toml validity
+        run: poetry check --no-interaction
+
+      - name: Cache Dependencies
+        id: cache-deps
+        uses: actions/cache@v2
+        with:
+          path: ${{github.workspace}}/.venv
+          key: poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: poetry-
+
+      - name: Install deps
+        if: steps.cache-deps.cache-hit != 'true'
+        run: |
+          poetry config virtualenvs.in-project true
+          poetry install --no-interaction
+
+      - name: Run tests
+        run: poetry run pytest -v
+
+      - name: Build Package
+        run: poetry build
+
+      - name: Release Notes
+        run: git log $(git describe HEAD~ --tags --abbrev=0)..HEAD --pretty='format:* %h %s%n  * %an <%ae>' --no-merges >> ".github/RELEASE-ENTRY-TEMPLATE.md"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: ".github/RELEASE-ENTRY-TEMPLATE.md"
+          token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
+          files: |
+            dist/bwrap-${{env.MODULE_VERSION}}-py3-none-any.whl
+            dist/bwrap-${{env.MODULE_VERSION}}.tar.gz
+        env:
+          GITHUB_REPOSITORY: mbeacom/bwrap
+
+      - name: Publish to PyPi
+        run: poetry publish -u $PYPI_USER -p $PYPI_TOKEN
+        env:
+          PYPI_USER: ${{ secrets.PYPI_USER }}
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
