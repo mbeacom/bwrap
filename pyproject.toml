@@ -3,28 +3,59 @@ name = "bwrap"
 version = "0"  # This is set dynamically via current git tag.
 description = "A basic python binary wrapper."
 authors = ["Mark Beacom <m@beacom.dev>"]
+include = [
+    "CHANGELOG.md",
+    "CODE_OF_CONDUCT.md",
+    "CONTRIBUTING.md",
+    "LICENSE",
+]
+readme = "README.md"
+repository = "https://github.com/mbeacom/bwrap"
+homepage = "https://mbeacom.github.io/bwrap/"
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: User Interfaces",
+    "Topic :: Utilities",
+]
 
 [tool.poetry.dependencies]
 python = "^3.9"
 
 [tool.poetry.group.dev.dependencies]
-isort = "^5.9.3"
-black = "^21.8b0"
+isort = "^5.10.1"
+black = "^21.11-beta.1"
 pydocstyle = "^6.1.1"
-pylint = "^2.10.2"
-bandit = "^1.7.0"
+pylint = "^2.12.1"
+bandit = "^1.7.1"
 safety = "^1.10.3"
 debugpy = "^1.5.1"
 mypy = "^0.910"
+poethepoet = "^0.11.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^6.2.5"
 coverage = "^5.5"
 pytest-mock = "^3.6.1"
+pytest-sugar = "^0.9.4"
+pytest-cov = "^3.0.0"
+pytest-xdist = "^2.4.0"
 
 [tool.poetry.group.docs.dependencies]
-mkdocs = "^1.2.2"
-mkdocs-material = "^7.3.1"
+mkdocs = "^1.2.3"
+mkdocs-material = "^7.3.6"
+pydocmd = "^1.0"
+pydoc-markdown = "^4.3.2"
 
 [tool.poetry.scripts]
 bwrap = "bwrap.core:main"
@@ -41,8 +72,26 @@ line_length = 120
 line-length = 120
 target-version = ["py39"]
 
+[tool.poe.tasks]
+isort = "isort --profile=black ."
+black = "black ."
+check-black = {cmd = "black . --check --diff", help = "Check code for black styling"}
+check-isort = {cmd = "isort --check --profile=black .", help = "Check code for import styling"}
+check-docstrings = "pydocstyle -e ."
+check-pylint = "pylint bwrap"
+check = ["check-isort", "check-black", "check-docstrings"]
+lint = ["check-docstrings", "check-pylint"]
+fix = ["isort", "black"]
+test = "pytest --cov=bwrap --cov-report=xml --cov-report=term"
+docs = "pydoc-markdown --build --site-dir public/"
+safety = "safety check"
+bandit = "bandit -r bwrap"
+security = ["safety", "bandit"]
+# requires poethepoet outside of poetry.
+install = "poetry install"
+build = "poetry build"
+
 [tool.pylint]
-max-line-length = 120
 
 [tool.pylint.messages_control]
 max-line-length = 120

@@ -1,0 +1,29 @@
+loaders:
+  - type: python
+processors:
+  - type: filter
+  - type: smart
+  - type: crossref
+renderer:
+  type: mkdocs
+  pages:
+    - title: Home
+      name: index
+      source: README.md
+    - title: Changelog
+      name: change-log
+      source: CHANGELOG.md
+    - title: Contributing
+      name: contrib
+      source: CONTRIBUTING.md
+    - title: Code of Conduct
+      name: coc
+      source: CODE_OF_CONDUCT.md
+    # - title: Code Documentation
+    #   children:
+    #     - title: bwrap
+    #       content: [ bwrap, bwrap.* ]
+  mkdocs_config:
+    site_name: "BWrap - Basic Binary Wrapper in Python"
+    theme: material
+    repo_url: https://github.com/mbeacom/bwrap
