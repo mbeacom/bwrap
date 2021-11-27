@@ -1,13 +1,14 @@
 on:
   push:
-    tags:
-      - '*'
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
-name: Create Release
+name: Run Tests
 
 jobs:
   release:
-    name: Create Release
+    name: Run Tests
     runs-on: 'ubuntu-latest'
     steps:
       - name: Checkout Source
@@ -62,34 +63,23 @@ jobs:
           key: poetry-${{ hashFiles('**/poetry.lock') }}
           restore-keys: poetry-
 
-      - name: Install deps
+      - name: Install Deps
         if: steps.cache-deps.cache-hit != 'true'
         run: |
           poetry config virtualenvs.in-project true
-          poetry install --group --no-interaction
+          poetry install --no-interaction
 
-      - name: Run tests
-        run: poetry run pytest -v
+      - name: Run Security Checks
+        run: poetry run poe security
 
-      - name: Build Package
-        run: poetry build
+      - name: Run Styling Enforcement
+        run: poetry run poe check
 
-      - name: Release Notes
-        run: git log $(git describe HEAD~ --tags --abbrev=0)..HEAD --pretty='format:* %h %s%n  * %an <%ae>' --no-merges >> ".github/RELEASE-ENTRY-TEMPLATE.md"
+      - name: Run Style Linting Enforcement
+        run: poetry run poe lint
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          body_path: ".github/RELEASE-ENTRY-TEMPLATE.md"
-          token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
-          files: |
-            dist/bwrap-${{env.MODULE_VERSION}}-py3-none-any.whl
-            dist/bwrap-${{env.MODULE_VERSION}}.tar.gz
-        env:
-          GITHUB_REPOSITORY: mbeacom/bwrap
+      - name: Run Tests
+        run: poetry run poe test
 
-      - name: Publish to PyPi
-        run: poetry publish -u $PYPI_USER -p $PYPI_TOKEN
-        env:
-          PYPI_USER: ${{ secrets.PYPI_USER }}
-          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+      - name: Codecov
+        uses: codecov/codecov-action@v2
